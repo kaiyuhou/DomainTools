@@ -4,9 +4,6 @@
 >
 > 本项目Github地址：[github.com/wenoif/DomainTools](https://github.com/wenoif/DomainTools)
 >
-> 本项目使用说明地址：[wenoif.com/44](https://wenoif.com/44)
->
-> ：）转载请注明本文地址
 
 
 
@@ -185,7 +182,6 @@
   > [定价页面](https://www.namesilo.com/pricing?rid=8736b96bt)	
   > 优惠代码:**“namesiloeoffer”**（可以抵扣1美元，约7元人民币）
 
-+  [更多优惠推荐](https://wenoif.com/42)
 
 
 
