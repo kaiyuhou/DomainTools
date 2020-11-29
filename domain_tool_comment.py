@@ -1,3 +1,6 @@
+#!/usr/local/bin/python
+# coding: utf-8
+
 # 引入相关模块
 import socket
 import select
@@ -44,7 +47,7 @@ def get_top_level_domain_name_suffix():
 
 # 判断检测: 域名信息，域名后缀，whois服务器
 def whois_query(domain_name, domain_name_server, domain_name_whois_server):
-    retry = 3
+    retry = 2
     #重复相应连接次数
     domain = domain_name + '.' + domain_name_server
     # 重组 域名.域名后缀
@@ -82,7 +85,6 @@ def whois_query(domain_name, domain_name_server, domain_name_whois_server):
 # 输出结果写入文件
 def get_reginfomation(domain_name, domain_name_suffix_infomation):
     infomation = whois_query(domain_name, domain_name_suffix_infomation[0], domain_name_suffix_infomation[1])
-    print(infomation)
     # 调用“whois_query” 获得返回
     
     reg = domain_name_suffix_infomation[2]
@@ -90,7 +92,7 @@ def get_reginfomation(domain_name, domain_name_suffix_infomation):
     if not infomation:
         with open(f'failure.txt','a') as f:
             f.write(f'{domain_name}.{domain_name_suffix_infomation[0]}\n')
-        print(f'域名{domain_name}.{domain_name_suffix_infomation[0]}查询失败！')
+        # print(f'域名{domain_name}.{domain_name_suffix_infomation[0]}查询失败！')
         return -1
 
     #判断返回信息包不包含没注册的标志
@@ -104,7 +106,6 @@ def get_reginfomation(domain_name, domain_name_suffix_infomation):
     else:
         return 0
     #     print(f'域名{domain_name}.{domain_name_suffix_infomation[0]} 已注册')
-
 
 
 #指定“后缀”和“字典”检测能否注册
@@ -241,10 +242,14 @@ def welcome():
     select = input()
     return select
 
-    
-
 # 主函数
 if __name__ == '__main__':
+    # -n: 情况 success.txt 和 和 failure 文件
+    if '-n' in sys.argv:
+        with open('success.txt', 'w') as fs, open('failure.txt', 'w') as ff:
+            fs.truncate()
+            ff.truncate()
+
     specify_suffix_and_dictionary()
 
 
@@ -269,4 +274,3 @@ if __name__ == '__main__':
     #     clear()
     #     print("\n输入错误 程序结束，仍需使用请重新运行。\n ")
     #     exit()
-    
