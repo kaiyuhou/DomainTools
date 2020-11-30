@@ -15,7 +15,7 @@ timeout = 2         # 等待时间
 socket.setdefaulttimeout(timeout)
 # 设置套接字操作的超时期，timeout是一个浮点数，单位是秒。值为None表示没有超时期。
 # 代表经过timeout秒后，如果还未下载成功，自动跳入下一次操作，此次下载失败。
-sleep_time = 0.001      #推迟调用线程的运行，单位是秒
+sleep_time = 0.01      #推迟调用线程的运行，单位是秒
 
 
 
@@ -70,8 +70,6 @@ def whois_query(domain_name, domain_name_server, domain_name_whois_server):
                     break
                 infomation += str(res)
             s.close()
-            
-
             time.sleep(sleep_time)
         except Exception as e:
             pass
@@ -81,14 +79,13 @@ def whois_query(domain_name, domain_name_server, domain_name_whois_server):
     return infomation
     
 
-
 # 输出结果写入文件
 def get_reginfomation(domain_name, domain_name_suffix_infomation):
     infomation = whois_query(domain_name, domain_name_suffix_infomation[0], domain_name_suffix_infomation[1])
     # 调用“whois_query” 获得返回
     
     reg = domain_name_suffix_infomation[2]
-    #判断有没有返回信息
+    # 判断有没有返回信息
     if not infomation:
         with open(f'failure.txt','a') as f:
             f.write(f'{domain_name}.{domain_name_suffix_infomation[0]}\n')
@@ -108,141 +105,109 @@ def get_reginfomation(domain_name, domain_name_suffix_infomation):
     #     print(f'域名{domain_name}.{domain_name_suffix_infomation[0]} 已注册')
 
 
-#指定“后缀”和“字典”检测能否注册
-def specify_suffix_and_dictionary():
-    domain_dictionary = 'dic/26pl3.txt'
-    domain_name_length = 3
-
-    domain_name_suffix_list = []
-    with open('suffix_list.txt', 'r') as f:
-        for line in f:
-            if line.strip():
-                domain_name_suffix_list.append(line.strip())
-
+"""
+修改这个函数，生成所有希望查询的 Domain List
+"""
+def get_domian_name_list():
+    domain_dictionary = 'dic/all1+2+3.txt'
+    domain_name_length = 1
     domain_name_list = []
-    with open(domain_dictionary,'r') as f:
-       for line in f:
+    with open(domain_dictionary, 'r') as f:
+        for line in f:
             if line and len(line.strip()) <= domain_name_length:
                 domain_name_list.append(line.strip())
 
-    top_level_domain_name_suffix_list = get_top_level_domain_name_suffix()[1:]  # ！！注意，这里默认忽略第一行
+    return domain_name_list
+
+
+"""
+修改这个函数，生成所有希望查询的后缀 List
+"""
+def get_domain_name_suffix_list():
+    domain_name_suffix_list = []
+    top_level_domain_name_suffix_list = get_top_level_domain_name_suffix()
     top_level_domain_name_suffix_array = [x.split('=')[0] for x in top_level_domain_name_suffix_list]
-    # eg: # [['com', 'whois.verisign-grs.com', 'No match for'], ['edu', 'whois.verisign-grs.com', 'No match for']
     top_level_domain_name_par_list = [x.split('=')[:-1] for x in top_level_domain_name_suffix_list]
 
-    # # 所有二字域名 suffix
-    # domain_name_suffix_list = []
-    # for suffix in top_level_domain_name_suffix_array:
-    #     index = top_level_domain_name_suffix_array.index(suffix)
-    #     if len(top_level_domain_name_par_list[index]) >= 4:
-    #         price = int(top_level_domain_name_par_list[index][3])
-    #     else:
-    #         price = 0
-    #     if len(suffix) <= 2 and price < 20:
-    #         domain_name_suffix_list.append(suffix)
+    # with open('suffix_list.txt', 'r') as f:
+    #     for line in f:
+    #         if line.strip() and line.strip() in top_level_domain_name_suffix_array:
+    #             domain_name_suffix_list.append(line.strip())
 
+    # 所有 suffix
+    domain_name_suffix_list = []
+
+    for suffix in top_level_domain_name_suffix_array:
+        index = top_level_domain_name_suffix_array.index(suffix)
+        if len(top_level_domain_name_par_list[index]) >= 4:
+            price = float(top_level_domain_name_par_list[index][3])
+        else:
+            price = 0.0
+        # if len(suffix) <= 2 and price < 20:
+        if True:
+            domain_name_suffix_list.append(suffix)
+
+    return domain_name_suffix_list
+
+
+
+#指定“后缀”和“字典”检测能否注册
+def specify_suffix_and_dictionary():
+    domain_name_list = get_domian_name_list()
+    domain_name_suffix_list = get_domain_name_suffix_list()
+
+    top_level_domain_name_suffix_list = get_top_level_domain_name_suffix()
+    # eg: ['com', 'org', ...]
+    top_level_domain_name_suffix_array = [x.split('=')[0] for x in top_level_domain_name_suffix_list]
+    # eg: [['com', 'whois.verisign-grs.com', 'No match for'], ...]
+    top_level_domain_name_par_list = [x.split('=')[:-1] for x in top_level_domain_name_suffix_list]
 
     for domain_name_suffix in domain_name_suffix_list:
         print(f'查询域名 {domain_name_suffix}, 待查询数量 {len(domain_name_list)}')
 
-        if domain_name_suffix not in top_level_domain_name_suffix_array:
-            print(f'域名后缀 {domain_name_suffix} 不在top_level_domain_name_suffix中')
-
-        top_level_domain_name_suffix_index = top_level_domain_name_suffix_array.index(domain_name_suffix)
+        suffix_index = top_level_domain_name_suffix_array.index(domain_name_suffix)
 
         for i, domain_name in enumerate(domain_name_list):
             sys.stdout.write(f'\r {i} / {len(domain_name_list)}')
             while threading.active_count() > max_thread:
                 time.sleep(sleep_time)
-            t = threading.Thread(target=get_reginfomation, args=(domain_name,top_level_domain_name_par_list[top_level_domain_name_suffix_index],))
+            t = threading.Thread(target=get_reginfomation, args=(domain_name, top_level_domain_name_par_list[suffix_index],))
             t.start()
             time.sleep(sleep_time)
-    
-#指定”域名“检测”所有后缀“能否注册
-def specify_the_domain_name():
-    domain_name = input("输入想要的域名(如wenoif.com只输入wenoif)____:")
+
+        print()
+
+
+"""
+直接使用文件查询： domain.txt
+"""
+def specify_domain():
     top_level_domain_name_suffix_list = get_top_level_domain_name_suffix()
-    top_level_domain_name_suffix_array = [x.split('=')[:-1] for x in top_level_domain_name_suffix_list][1:]
-     # split() 通过指定分隔符对字符串进行切片
-    # x.split('=')表示：以"="为分隔符进行切片
-    # [:-1]表示：直到倒数第一个即最后一个
-    # for x in tld_list表示：在 tld_list 中进行切片，切片之后类似于多维数组
-    # [1:]表示：切片后从第二个(下标为1)开始放入top_level_domain_name_suffix_array中（第一个是作者信息）
-    for domain_name_suffix in top_level_domain_name_suffix_array:
+    # eg: ['com', 'org', ...]
+    top_level_domain_name_suffix_array = [x.split('=')[0] for x in top_level_domain_name_suffix_list]
+    # eg: [['com', 'whois.verisign-grs.com', 'No match for'], ...]
+    top_level_domain_name_par_list = [x.split('=')[:-1] for x in top_level_domain_name_suffix_list]
+
+    domain_list = []
+    with open('domain.txt', 'r') as f:
+        for line in f:
+            if line and line.strip():
+                domain_list.append(line.strip())
+
+    for i, domain in enumerate(domain_list):
+        sys.stdout.write(f'\r {i} / {len(domain_list)}')
+
+        name, suffix = domain.split('.')
+
+        suffix_index = top_level_domain_name_suffix_array.index(suffix)
         while threading.active_count() > max_thread:
-        # 返回当前活跃的Thread对象数量   直到大于指定的线程数量
-            pass
-        t = threading.Thread(target=get_reginfomation, args=(domain_name,domain_name_suffix,))
-        # Python Thread类表示在单独的控制线程中运行的活动。给构造函数传递回调对象
+            time.sleep(sleep_time)
+        t = threading.Thread(target=get_reginfomation,
+                             args=(name, top_level_domain_name_par_list[suffix_index],))
         t.start()
-        # 开始，休息
         time.sleep(sleep_time)
 
-# 指定”字典“检测”所有后缀“能否注册
-def specify_a_dictionary():
-    domain_dictionary = input("输入字典名(如:demo.txt)____:")
-    domain_name_length = int(input("输入过滤长度(如:7)____:"))
-    
-    domain_dictionary_list = []
-    with open(domain_dictionary,'r') as f:
-       for line in f:
-            if line:
-                if (len(line) < domain_name_length):
-                    domain_dictionary_list.append(line.strip())
-                    #strip() 方法用于移除字符串头尾指定的字符（默认为空格或换行符）或字符序列
-                    #append() 方法用于在列表末尾添加新的对象
-                    #追加到name_list列表
 
-    top_level_domain_name_suffix_list = get_top_level_domain_name_suffix()
-    top_level_domain_name_suffix_array = [x.split('=')[:-1] for x in top_level_domain_name_suffix_list][1:]
-
-    for domain_name_suffix in top_level_domain_name_suffix_array:
-        for domain_name in domain_dictionary_list:
-            while threading.active_count() > max_thread:
-                pass
-            t = threading.Thread(target=get_reginfomation, args=(domain_name,domain_name_suffix,))
-            t.start()
-            time.sleep(sleep_time)    
-    
-# 退出函数  
-def exit():
-    print(  22 * '-' + '再见' + 22 * '-' + '\n\n' 
-            + '感谢您的使用，技术能力有限，功能尚不完善，还请多多包涵。\n' 
-            + '我有一个梦想，只是有一个梦想。你还有梦想吗，是否只是个梦想？\n'
-            + """望君牢记：
-        我们
-        没有如果
-        我的网站是 WeNoIf.COM
-        """
-            + '欢迎随时来撩，我们没有如果：WeNoIf.COM\n'
-            + '\n' + 22 * '-' + '------' + 22 * '-'
-        )
-
-# 欢迎函数
-def welcome():
-    clear()
-    xin()
-    print(4 * '=' + '关于' + 4 * '=' +  '获取帮助:http://wenoif.com/44'+ 8 * '=' 
-            + '\n\n你好，这是一个可以快速检验域名是否被注册，支持扫描超过200个顶级域名的域名工具。\n' 
-            + '参考于Github上的"Har-Kuun/DomainMegaBot"和"luodaoyi/DomainScan"项目,感谢前辈的付出。\n'
-            + '程序查询过程中，会将未注册的域名保存到程序同级目录中的"success.txt"文件中。\n'
-            + '用户可以将自己想要查找的域名(不带后缀)写入同目录中的”demo.txt“文件中，每行一个。\n'
-        )
-        
-    print(4 * '=' + '菜单' + 4 * '=' +  '获取帮助:http://wenoif.com/44'+ 8 * '=' 
-            + '\n\n'
-            + '1.指定”域名“检测”所有后缀“能否注册\n'
-            + '2.指定”字典“检测”所有后缀“能否注册\n'
-            + '3.指定“后缀”和“字典”检测能否注册\n'
-            
-            + '---------------------结束程序请输序号：0' + '\n'
-            + '---------------------请输入你选择的序号：' , end=""
-        )
-        
-    select = input()
-    return select
-
-# 主函数
 if __name__ == '__main__':
     # -n: 情况 success.txt 和 和 failure 文件
     if '-n' in sys.argv:
@@ -250,27 +215,7 @@ if __name__ == '__main__':
             fs.truncate()
             ff.truncate()
 
-    specify_suffix_and_dictionary()
-
-
-    # select = welcome()
-    # # 接受welcone函数返回的用户选项
-    # if (select == "0"):
-    # # if 判断函数，如果选项为0则执行以下【if后面的括号可有可无】
-    #     clear()
-    #     exit()
-    # elif (select == "1"):
-    #     clear()
-    #     specify_the_domain_name()
-    # elif (select == "2"):
-    #     clear()
-    #     specify_a_dictionary()
-    # elif select == "3":
-    # # else if 否则，如果选项为1则执行以下【if后面的括号可有可无】
-    #     clear()
-    #     specify_suffix_and_dictionary()
-    # else:
-    # #如果到最后都不符合，则执行以下【print中可以使用单/双/三 引号】
-    #     clear()
-    #     print("\n输入错误 程序结束，仍需使用请重新运行。\n ")
-    #     exit()
+    if '-f' in sys.argv:
+        specify_domain()
+    else:
+        specify_suffix_and_dictionary()
