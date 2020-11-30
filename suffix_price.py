@@ -36,8 +36,30 @@ def update_price():
             f.write(line.strip() + '\n')
 
 
+def set_price_to_file(filename):
+    domain_list = []
+    with open(filename, 'r') as f:
+        for line in f:
+            if line and line.strip():
+                domain_list.append(line.strip())
+
+    top_level_domain_name_suffix_list = get_top_level_domain_name_suffix()
+    # eg: ['com', 'org', ...]
+    suffix_array = [x.split('=')[0] for x in top_level_domain_name_suffix_list]
+    # eg: [['com', 'whois.verisign-grs.com', 'No match for', '121'], ...]
+    par_list = [x.split('=')[:-1] for x in top_level_domain_name_suffix_list]
+
+    with open(filename, 'w') as f:
+        for domain in domain_list:
+            name, suffix = domain.split('.')
+            index = suffix_array.index(suffix)
+            price = par_list[index][3]
+            f.write(f'{domain}\t{price}\n')
+
+
 if __name__ == '__main__':
-    update_price()
+    # update_price()
+    set_price_to_file('data数据库/所有单字域名-2020-11-29.txt')
 
     # print(get_reginfomation('csy', ['su', 'whois.tcinet.ru', 'No entries found']))
     # print(get_reginfomation('csy', 'sx=whois.sx=o match for='.split('=')))
