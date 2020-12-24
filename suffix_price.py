@@ -57,9 +57,21 @@ def set_price_to_file(filename):
             f.write(f'{domain}\t{price}\n')
 
 
+def sort_success():
+    domain_set = set()
+    with open('success.txt', 'r') as f:
+        for line in f:
+            if line and line.strip():
+                domain_set.add(line.strip())
+    domain_list = list(domain_set)
+    domain_list.sort()
+    with open('success.txt', 'w') as f:
+        for domain in domain_list:
+            f.write(f'{domain}\n')
+
+
 if __name__ == '__main__':
     # update_price()
-    set_price_to_file('data数据库/所有单字域名-2020-11-29.txt')
-
-    # print(get_reginfomation('csy', ['su', 'whois.tcinet.ru', 'No entries found']))
+    # set_price_to_file('data数据库/所有单字域名-2020-11-29.txt')
     # print(get_reginfomation('csy', 'sx=whois.sx=o match for='.split('=')))
+    sort_success()
